@@ -7,6 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.*;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.test.context.TestPropertySource;
 
 import javax.persistence.Column;
 import javax.persistence.EnumType;
@@ -17,60 +20,95 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @SpringBootTest
+@TestPropertySource(locations="classpath:application-test.properties")
 class ItemRepositoryTest {
 
     @Autowired
     ItemRepository itemRepository;
 
     @Test
-    @DisplayName("상품저장 테스트")
+    @DisplayName("상품 저장 테스트")
     public void createItemTest(){
-
         Item item = new Item();
-
-        item.setItemNm("홍길동"); // 성명
-        item.setPrice(123000);   //가격
-        item.setStockNumber(2500); //재고수량
-        item.setItemDetail("연습"); //상품 상세 설명
-        item.setItemSellStatus(ItemSellStatus.SELL); //상품 판매 상태
+        item.setItemNm("테스트 상품");
+        item.setPrice(10000);
+        item.setItemDetail("테스트 상품 상세 설명");
+        item.setItemSellStatus(ItemSellStatus.SELL);
+        item.setStockNumber(100);
         item.setRegTime(LocalDateTime.now());
         item.setUpdateTime(LocalDateTime.now());
-
-        Item SavedItem = itemRepository.save(item);
-        System.out.println(SavedItem.toString());
-
+        Item savedItem = itemRepository.save(item);
+        System.out.println(savedItem.toString());
     }
 
-    public void createItemList() {
-
-        this.createItemTest();
-
-        for(int i=1;i<=10;i++) {
-
+    public void createItemList(){
+        for(int i=1;i<=10;i++){
             Item item = new Item();
-
-            item.setItemNm("테스트상품" + i); // 성명
-            item.setPrice(123000 + i);   //가격
-            item.setStockNumber(2500 + i); //재고수량
-            item.setItemDetail("연습" + i); //상품 상세 설명
-            item.setItemSellStatus(ItemSellStatus.SELL); //상품 판매 상태
-//            item.setStocNumber(100);
-            item.setRegTime(LocalDateTime.now());
+            item.setItemNm("테스트 상품" + i);
+            item.setPrice(10000 + i);
+            item.setItemDetail("테스트 상품 상세 설명" + i);
+            item.setItemSellStatus(ItemSellStatus.SELL);
+            item.setStockNumber(100); item.setRegTime(LocalDateTime.now());
             item.setUpdateTime(LocalDateTime.now());
-
-            Item SavedItem = itemRepository.save(item);
-
-            System.out.println(SavedItem.toString());
+            Item savedItem = itemRepository.save(item);
         }
     }
 
     @Test
-    @DisplayName("상품저장 테스트")
-    public void findByItemTest(){
-
+    @DisplayName("상품명 조회 테스트")
+    public void findByItemNmTest(){
         this.createItemList();
-        List<Item> itemList = itemRepository.findByItemNm("테스트상품1");
+        List<Item> itemList = itemRepository.findByItemNm("테스트 상품1");
+        for(Item item : itemList){
+            System.out.println(item.toString());
+        }
+    }
 
+    @Test
+    @DisplayName("상품명 조회 테스트")
+    public void findByItemNm(){
+        this.createItemList();
+        List<Item> itemList = itemRepository.findByItemNmOrItemDetail("테스트 상품1","테스트 상품 상세 설명5");
+        for(Item item : itemList){
+            System.out.println(item.toString());
+        }
+    }
+
+    @Test
+    @DisplayName("가격 LessThan 테스트")
+    public void findByPrice(){
+        this.createItemList();
+        List<Item> itemList = itemRepository.findByPriceLessThan(10005);
+        for(Item item : itemList){
+            System.out.println(item.toString());
+        }
+    }
+
+    @Test
+    @DisplayName("가격 내림차순 조회 테스트")
+    public void findByPriceLessThanEqualOrderByPriceDesc(){
+        this.createItemList();
+        List<Item> itemList = itemRepository.findByPriceLessThanEqualOrderByPriceDesc(10005);
+        for(Item item : itemList){
+            System.out.println(item.toString());
+        }
+    }
+
+    @Test
+    @DisplayName("@Query를 이용한 상품 조회 테스트")
+    public void findByItemDetailTest(){
+        this.createItemList();
+        List<Item> itemList = itemRepository.findByItemDetail("테스트 상품 상세 설명");
+        for(Item item : itemList){
+            System.out.println(item.toString());
+        }
+    }
+
+    @Test
+    @DisplayName("nativeQuery 속성을 이용한 상품 조회 테스트")
+    public void findByItemDetailByNative(){
+        this.createItemList();
+        List<Item> itemList = itemRepository.findByItemDetailByNative("테스트 상품 상세 설명");
         for(Item item : itemList){
             System.out.println(item.toString());
         }
